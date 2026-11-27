@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SecureTunnel Presentation</title>
+  <style>
+    :root { --bg:#0b1018; --panel:#111824; --border:#263247; --blue:#5f92ff; --green:#55b997; --red:#ed6b76; --text:#edf3fc; --muted:#91a0b6; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#05080d; color:var(--text); font-family:Inter,Segoe UI,sans-serif; }
+    .deck { max-width:1180px; margin:auto; }
+    .slide { min-height:100vh; padding:70px 90px; display:none; background:linear-gradient(145deg,var(--bg),#101827); position:relative; border-bottom:1px solid #1d2634; }
+    .slide.active { display:block; }
+    .slide:after { content:attr(data-number); position:absolute; right:35px; bottom:28px; color:#5d6a7d; font-size:14px; }
+    h1 { font-size:68px; margin:0 0 18px; letter-spacing:-3px; }
+    h2 { font-size:44px; margin:0 0 34px; letter-spacing:-1.5px; }
+    h3 { color:var(--blue); margin:0 0 8px; }
+    p,li { font-size:25px; line-height:1.55; color:#b5c1d3; }
+    strong { color:#fff; }
+    .subtitle { color:var(--muted); font-size:29px; }
+    .badge { display:inline-block; border:1px solid #34527b; color:#82a9f6; border-radius:999px; padding:8px 14px; font-size:18px; margin-bottom:20px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .card { border:1px solid var(--border); background:var(--panel); border-radius:14px; padding:25px; }
+    .card p { font-size:18px; margin:8px 0 0; }
+    .metric { font-size:52px; color:var(--blue); font-weight:700; }
+    .architecture { display:flex; align-items:center; justify-content:space-between; margin-top:70px; }
+    .node { width:20%; height:170px; border:1px solid var(--border); background:var(--panel); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+    .node b { font-size:21px; } .node span { color:var(--muted); font-size:16px; margin-top:12px; }
+    .arrow { color:var(--blue); font-size:38px; }
+    ul { margin:16px 0 0 24px; }
+    .code { background:#080d14; border:1px solid var(--border); border-radius:12px; padding:22px; font-family:Consolas,monospace; color:#93b1ef; font-size:19px; line-height:1.7; }
+    .controls { position:fixed; right:24px; bottom:24px; z-index:20; display:flex; gap:8px; }
+    .controls button { width:44px; height:44px; border:1px solid var(--border); border-radius:8px; background:#111824; color:#fff; font-size:20px; cursor:pointer; }
+  </style>
+</head>
+<body>
+<main class="deck">
+  <section class="slide active" data-number="01 / 10">
+    <div class="badge">Cryptography and Network Security</div>
+    <h1>SecureTunnel</h1>
+    <p class="subtitle">IPsec Encapsulating Security Payload Security Simulator</p>
+    <div style="margin-top:120px;color:#728198;font-size:20px">React • FastAPI • AES-256-GCM • SQLite</div>
+  </section>
+
+  <section class="slide" data-number="02 / 10">
+    <h2>Problem statement</h2>
+    <div class="grid">
+      <div class="card"><h3>Eavesdropping</h3><p>An attacker may read packet contents sent over an untrusted network.</p></div>
+      <div class="card"><h3>Modification</h3><p>An attacker may alter data without immediately knowing the original content.</p></div>
+      <div class="card"><h3>Replay</h3><p>A captured valid packet may be resent to recreate an earlier action.</p></div>
+      <div class="card"><h3>Unauthorized access</h3><p>Invalid packets must not reveal protected information.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-number="03 / 10">
+    <h2>Objectives</h2>
+    <ul>
+      <li>Demonstrate real <strong>AES-256-GCM</strong> encryption and authentication.</li>
+      <li>Construct an inspectable representation of an ESP packet.</li>
+      <li>Detect <strong>ciphertext tampering</strong> and reject invalid packets.</li>
+      <li>Track sequence numbers and reject replayed packets.</li>
+      <li>Present live packet events in a professional dashboard.</li>
+    </ul>
+  </section>
+
+  <section class="slide" data-number="04 / 10">
+    <h2>System architecture</h2>
+    <div class="architecture">
+      <div class="node"><b>React</b><span>Presentation and packet controls</span></div><div class="arrow">→</div>
+      <div class="node"><b>FastAPI</b><span>REST endpoints and validation</span></div><div class="arrow">→</div>
+      <div class="node"><b>Cryptography</b><span>AES-256-GCM operations</span></div><div class="arrow">→</div>
+      <div class="node"><b>SQLite</b><span>Packet event history</span></div>
+    </div>
+  </section>
+
+  <section class="slide" data-number="05 / 10">
+    <h2>ESP packet flow</h2>
+    <div class="grid3">
+      <div class="card"><h3>1. Protect</h3><p>Generate nonce and encrypt plaintext with AES-GCM.</p></div>
+      <div class="card"><h3>2. Transmit</h3><p>Send SPI, sequence number, nonce, ciphertext and tag.</p></div>
+      <div class="card"><h3>3. Receive</h3><p>Verify tag and replay state before decryption.</p></div>
+    </div>
+    <div class="code" style="margin-top:28px">SPI | Sequence Number | IV | Ciphertext | Authentication Tag</div>
+  </section>
+
+  <section class="slide" data-number="06 / 10">
+    <h2>Cryptographic design</h2>
+    <div class="grid">
+      <div>
+        <h3>AES-256-GCM</h3>
+        <p>AES uses a 256-bit key. GCM provides encryption plus authentication.</p>
+        <h3>Nonce</h3>
+        <p>A unique random 96-bit nonce is generated for every packet.</p>
+      </div>
+      <div class="card">
+        <p><strong>Associated data</strong></p>
+        <div class="code">SPI | Packet ID | Sequence Number</div>
+        <p>Changing ciphertext or ESP associated data invalidates authentication.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-number="07 / 10">
+    <h2>Attack simulations</h2>
+    <div class="grid">
+      <div class="card"><h3 style="color:var(--red)">Ciphertext tampering</h3><p>One byte is flipped. GCM authentication fails and plaintext is not revealed.</p></div>
+      <div class="card"><h3 style="color:#d3b977">Replay attack</h3><p>The previously received sequence number is detected and the packet is rejected.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-number="08 / 10">
+    <h2>Application features</h2>
+    <div class="grid3">
+      <div class="card"><div class="metric">01</div><p>Live dashboard and network topology</p></div>
+      <div class="card"><div class="metric">02</div><p>Packet inspector and encrypted payload view</p></div>
+      <div class="card"><div class="metric">03</div><p>Replay and tampering labs</p></div>
+      <div class="card"><div class="metric">04</div><p>SQLite security event history</p></div>
+      <div class="card"><div class="metric">05</div><p>Transport and tunnel protocol explorer</p></div>
+      <div class="card"><div class="metric">06</div><p>Reset and automated API tests</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-number="09 / 10">
+    <h2>Live demonstration</h2>
+    <ol>
+      <li><p>Create and encrypt a confidential message.</p></li>
+      <li><p>Inspect the generated ESP fields.</p></li>
+      <li><p>Verify and decrypt it successfully.</p></li>
+      <li><p>Modify ciphertext and demonstrate rejection.</p></li>
+      <li><p>Replay a received packet and demonstrate rejection.</p></li>
+    </ol>
+  </section>
+
+  <section class="slide" data-number="10 / 10">
+    <h2>Conclusion</h2>
+    <p>SecureTunnel demonstrates how IPsec ESP concepts protect communication through <strong>confidentiality, integrity, authentication and replay resistance</strong>.</p>
+    <div class="card" style="margin-top:40px">
+      <h3>Scope clarity</h3>
+      <p>This is an educational ESP simulator using real AES-GCM cryptography. It does not implement IKEv2 or a full operating-system network tunnel.</p>
+    </div>
+  </section>
+</main>
+<div class="controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <button id="next" aria-label="Next slide">›</button>
+</div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let index=0;
+  function show(next) {
+    index=(next+slides.length)%slides.length;
+    slides.forEach((slide,i)=>slide.classList.toggle('active',i===index));
+  }
+  document.getElementById('prev').onclick=()=>show(index-1);
+  document.getElementById('next').onclick=()=>show(index+1);
+  document.addEventListener('keydown',(event)=>{
+    if(event.key==='ArrowRight'||event.key===' ') show(index+1);
+    if(event.key==='ArrowLeft') show(index-1);
+  });
+</script>
+</body>
+</html>
